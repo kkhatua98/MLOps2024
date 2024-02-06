@@ -1,0 +1,1 @@
+Why RDS database is not being created using CloudFormation Template: https://stackoverflow.com/questions/63483093/aws-cloudformation-unable-to-create-rds-database-because-database-security-grou
