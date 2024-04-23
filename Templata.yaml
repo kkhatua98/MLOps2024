@@ -97,6 +97,19 @@ Parameters:
     MaxLength: '41'
     AllowedPattern: '[a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
+  
+  NodeInstanceType:
+    Type: String
+    Description: EC2 instance type for the worker nodes
+    Default: t3.medium
+  
+  DesiredCapacity:
+    Type: Number
+    Description: Desired number of worker nodes
+    Default: 2
+    MinValue: 1
+    MaxValue: 10
+    
 
 Resources:
   VPC:
@@ -331,9 +344,62 @@ Resources:
           # - subnet-e7e761ac
         EndpointPublicAccess: true
         EndpointPrivateAccess: false
+      Logging:
+        ClusterLogging:
+          EnabledTypes:
+            - Type: audit
+      AccessConfig:
+        AuthenticationMode: API_AND_CONFIG_MAP
+        BootstrapClusterCreatorAdminPermissions: true
       Tags:
         - Key: name
           Value: eks-cluster
+  
+  ClusterAccessEntry:
+    Type: AWS::EKS::AccessEntry
+    DependsOn: EKSCluster
+    Properties:
+      AccessPolicies: 
+        - AccessScope:
+            Type: cluster
+          PolicyArn: arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
+      ClusterName: Prod
+      PrincipalArn: arn:aws:iam::720541911643:user/kaustav
+  
+  NodeInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: eks-node-instance-role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+  
+  NodeGroup:
+    Type: AWS::EKS::Nodegroup
+    DependsOn: 
+      - EKSCluster
+      - NodeInstanceRole
+    Properties:
+      ClusterName: Prod
+      NodegroupName: ProdNodeGroup
+      NodeRole: !GetAtt NodeInstanceRole.Arn
+      Subnets: 
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      ScalingConfig:
+        DesiredSize: !Ref DesiredCapacity
+        MinSize: 1
+        MaxSize: 10
+      InstanceTypes:
+        - !Ref NodeInstanceType
 
 Outputs:
   VPC:

@@ -1,1 +1,7 @@
 Why RDS database is not being created using CloudFormation Template: https://stackoverflow.com/questions/63483093/aws-cloudformation-unable-to-create-rds-database-because-database-security-grou
+
+This is a very helpful blog on how to give access of EKS cluster to IAM users who did not create the cluster. Though I was using CloudFormation, still the information are helpful. This is from EKS only, we do not have do anything in our config file.
+https://securitylabs.datadoghq.com/articles/eks-cluster-access-management-deep-dive/
+
+This link shows how to edit the config file to allow an IAM user to access cluster.
+https://stackoverflow.com/questions/55308605/only-the-creator-user-can-manage-aws-kubernetes-cluster-eks-from-kubectl
